@@ -1,8 +1,16 @@
-Codeforces Parser v1.5.1
+Codeforces Parser v1.5.1 (for windows cmd & python v0.1)
 =================
 
 Summary
 -------
+
+source from
+https://github.com/johnathan79717/codeforces-parser
+
+There is only problems and tests parser left ( no generating cmd command for tessing,
+I use separate project and include/exclude file to it, while testing )
+
+old summary:
 
 [Codeforces](http://codeforces.com/) is a website for _competitive programming_. It holds contests, so-called **Codeforces Rounds**, about every week.
 

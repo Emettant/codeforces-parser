@@ -18,19 +18,27 @@ import re
  
 # User modifiable constants:
 TEMPLATE='main.cc'
-COMPILE_CMD='g++ -g -std=c++0x -Wall $DBG'
+#COMPILE_CMD='g++ -g -std=c++0x -Wall $DBG'
 SAMPLE_INPUT='input'
 SAMPLE_OUTPUT='output'
 MY_OUTPUT='my_output'
+GLOBALPATH='C:\\Users\\vipyvo\\codeforces-parser\\'
 
 # Do not modify these!
-VERSION='CodeForces Parser v1.5.1: https://github.com/johnathan79717/codeforces-parser'
-RED_F='\033[31m'
-GREEN_F='\033[32m'
-BOLD='\033[1m'
-NORM='\033[0m'
-TIME_CMD='`which time` -o time.out -f "(%es)"'
-TIME_AP='`cat time.out`'
+# source from VERSION='CodeForces Parser v1.5.1: https://github.com/johnathan79717/codeforces-parser'
+VERSION='CodeForces Parser v1.5.1 v0.1\: https://github.com/Emettant/codeforces-parser'
+#RED_F='\033[31m'
+#GREEN_F='\033[32m'
+#BOLD='\033[1m'
+#NORM='\033[0m'
+#TIME_CMD='`which time` -o time.out -f "(%es)"'
+#TIME_AP='`cat time.out`'
+RED_F=''
+GREEN_F=''
+BOLD=''
+NORM=''
+TIME_CMD=''
+TIME_AP=''
 
 # Problems parser.
 class CodeforcesProblemParser(HTMLParser):
@@ -133,6 +141,52 @@ def parse_contest(contest):
     parser.feed(html.decode('utf-8'))
     return parser
 
+# Generates solution file with tests
+def generate_tests(fullpath, number_of_tests, problem):
+    with open(fullpath + problem + '.' + TEMPLATE.split('.')[1], 'a') as solution:
+        solution.write(
+            '''            
+#ifdef ONLINE_JUDGE
+	MainSolve();
+#endif
+
+#ifndef ONLINE_JUDGE
+	int _flag_ = 0;
+#endif
+'''                     )
+        for i in range(1, number_of_tests):
+             solution.write((
+                  '''
+#ifndef ONLINE_JUDGE
+	freopen("{0}{2}{1}.txt", "r", stdin);
+	MainSolve("Case {1} :");
+#endif
+'''
+                ).format(fullpath.replace('\\','\\\\'), i, SAMPLE_INPUT))
+        for i in range(1, number_of_tests):
+             solution.write((
+'''
+#ifndef ONLINE_JUDGE
+	freopen("{0}{4}{1}", "r", stdin);
+	freopen("{0}{2}{1}", "w", stdout);
+	MainSolve();
+	if ((ReadAllLines("{0}{2}{1}")) == ReadAllLines("{0}{3}{1}"))_flag_++;
+#endif
+'''
+                ).format(fullpath.replace('\\','\\\\'), i, SAMPLE_OUTPUT, MY_OUTPUT, SAMPLE_INPUT))
+        solution.write('''
+#ifndef ONLINE_JUDGE
+	if (_flag_ == 3) cerr << "Pretests Good!" << endl;
+	else cerr << "Pretests failed!" << endl;
+#endif
+
+
+
+	return 0;
+}
+            ''')
+
+# Old version
 # Generates the test script.
 def generate_test_script(folder, num_tests, problem):
     with open(folder + 'test.sh', 'w') as test:
@@ -192,10 +246,10 @@ def generate_test_script(folder, num_tests, problem):
 # Main function. 
 def main():
     print (VERSION)
-    if(len(argv) < 2):
-        print('USAGE: ./parse.py 512')
-        return
-    contest = argv[1]
+    #if(len(argv) < 2):
+    #    print('USAGE: ./parse.py 512')
+    #    return
+    contest = 512 #argv[1]
     
     # Find contest and problems.
     print ('Parsing contest %s, please wait...' % contest)
@@ -206,15 +260,16 @@ def main():
     # Find problems and test cases.
     for index, problem in enumerate(content.problems):
         print ('Downloading Problem %s: %s...' % (problem, content.problem_names[index]))
-        folder = '%s/%s/' % (contest, problem)
-        call(['mkdir', '-p', folder])
-        call(['cp', '-n', TEMPLATE, '%s/%s/%s.%s' % (contest, problem, problem, TEMPLATE.split('.')[1])])
+        folder = '%s\\%s\\' % (contest, problem)
+        call(['mkdir', folder], shell=True)
+        call(['copy', '/-Y', TEMPLATE, '%s\\%s\\%s.%s' % (contest, problem, problem, TEMPLATE.split('.')[1])], shell=True)
         num_tests = parse_problem(folder, contest, problem)
         print('%d sample test(s) found.' % num_tests)
-        generate_test_script(folder, num_tests, problem)
+        #generate_test_script(folder, num_tests, problem)
+        generate_tests(GLOBALPATH + folder, num_tests, problem)
         print ('========================================')
         
-    print ('Use ./test.sh to run sample tests in each directory.')
+    #print ('Use ./test.sh to run sample tests in each directory.')
  
 if __name__ == '__main__':
     main()
